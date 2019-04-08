@@ -1,0 +1,9 @@
+<h1>Subjects#index</h1>
+<p>Find me in app/views/subjects/index.html.erb</p>
+<% @subject.each do |sub| %>
+
+ <%= sub.name %>
+ <%= sub.code %><br>
+
+<% end %>
+<%= link_to 'New ', new_subject_path  %>

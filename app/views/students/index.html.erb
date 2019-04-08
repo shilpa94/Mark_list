@@ -1,0 +1,129 @@
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+.input_mark{
+  width: 110px;
+}
+</style>
+
+<table  style="width:100%">
+  <tr>
+    <th><input type="checkbox" id = "select_all"> Select all</th>
+    <th>Roll no:</th> 
+    <th>Name</th>
+    <th>Email</th>
+    <%@subject.each do |sub| %>
+    <th><%= sub.name%></th> 
+    <% end %>
+    <th>Total/600:</th> 
+  </tr>
+
+  <% @student.each do |student| %>
+    <tr id="<%= student.id %>">
+      <td><input type="checkbox"class="cb" id="checkbox"></td>
+      <td><%= student.id%></td>
+      <td><%= student.name%></td>
+      <td><%= student.email%></td>
+      <% @subject.each do | sub| %>
+      <td>
+        <input type="text" student="<%= student.id %>" subject="<%= sub.id %>" class="input_mark" value="<%= student.student_subjects.where(subject_id: sub.id).
+        first.try(:mark)%>">
+      </td>
+      <% end %>
+      <td class="last"></td>
+    </tr>
+  <% end %>
+</table>
+
+<div class ="result_show">
+  <p id = "selected_students"></p>
+  <p id = "total_marks"></p>
+  <p id = "percentage"></p>
+</div>
+
+<script type="text/javascript">
+  var url = "<%= add_marks_students_path %>";
+
+  $('.input_mark').change(function(){
+    var student = $(this).attr('student');
+    var subject = $(this).attr('subject');
+    var mark = $(this).val();
+    var params = {
+      student_id: student,
+      subject_id: subject,
+      mark: mark
+    }
+    postData(url, params, function(data) {
+      // console.log(data);
+    });
+  });
+
+  function postData(url, params, callback) {
+    $.ajax({
+      type: "POST",
+      url:url,
+      dataType: "json",
+      data: params,
+      success: function( data ) {
+        callback(data);
+      },
+      error: function(data){
+        callback(data);
+      }
+    });
+  };
+
+  var selected_students = 0;
+        
+  $("#select_all").click(function () {
+    $(".cb").prop('checked', $(this).prop('checked'));
+    calculate();
+  });
+  $('.cb').change(function(){ 
+    if(false == $(this).prop("checked")){ 
+      $("#select_all").prop('checked', false); 
+    }
+    if ($('.cb:checked').length == $('.cb').length ){
+      $("#select_all").prop('checked', true);
+    }
+  });
+
+  $(".cb").change(function(){
+    calculate();
+  });
+
+  function calculate() {
+    var total_marks = 0;
+    var  percentage = 0;
+
+    $("#checkbox:checked").each(function () {
+      var each_total = 0;
+      var mark = 0;
+
+      $(this).closest("tr").find(".input_mark").each(function(){
+        mark = parseFloat($(this).val());
+        each_total += mark;
+      });
+      $(this).closest("tr").find(".last").html(each_total);
+      total_marks += each_total;
+    });
+
+    selected_students = $("#checkbox:checked").length;
+    $("#selected_students").html("Total selected students:" + selected_students); 
+    $("#total_marks").html("Total marks:" + total_marks); 
+    percentage = (total_marks*100)/(selected_students*600);
+    $("#percentage").html("Total percentage:"+ percentage);
+
+    $('.cb').not(':checked').each(function(){
+     $(this).closest("tr").find(".last").html('');
+    }); 
+
+    if(selected_students == 0){
+      $(".result_show").hide();
+    } else {
+      $(".result_show").show();
+    }
+  };
+</script>
